@@ -61,16 +61,7 @@ body {
 
 .brand {
   display: flex;
-  gap: 0.95rem;
-  align-items: center;
-}
-
-.brand-thumb {
-  width: clamp(44px, 6vw, 56px);
-  height: auto;
-  flex: 0 0 auto;
-  border-radius: 10px;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.25);
+  align-items: flex-start;
 }
 
 .brand-copy {
@@ -177,9 +168,8 @@ body {
 }
 
 .inline-link-btn {
-  display: inline-flex;
+  display: inline-block;
   align-items: center;
-  text-decoration: none;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: color-mix(in srgb, var(--card) 90%, var(--bg-soft));
@@ -187,11 +177,82 @@ body {
   padding: 0.55rem 0.78rem;
   font-size: 0.9rem;
   font-weight: 700;
+  cursor: pointer;
 }
 
 .inline-link-btn:hover {
   border-color: var(--primary);
   color: var(--primary);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(8, 16, 32, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal {
+  width: min(980px, 100%);
+  max-height: min(85vh, 760px);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.04rem;
+}
+
+.modal-close {
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text);
+  border-radius: 9px;
+  padding: 0.4rem 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.modal .small {
+  margin: 0;
+  padding: 0.75rem 1rem 0.2rem;
+}
+
+.modal-script {
+  margin: 0.5rem 1rem 1rem;
+  padding: 0.85rem;
+  border-radius: 10px;
+  border: 1px solid #1f3050;
+  background: #081229;
+  color: #e7eefb;
+  font-size: 0.83rem;
+  overflow: auto;
+  white-space: pre;
+  flex: 1;
 }
 
 .verify-box {

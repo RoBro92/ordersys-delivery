@@ -53,6 +53,41 @@ install_docker_if_missing() {
   systemctl enable --now docker
 }
 
+write_apt_manifest() {
+  local install_path="$1"
+  local manifest_dir="${install_path}/install"
+  local manifest_file="${manifest_dir}/apt-manifest.txt"
+  local generated_at
+  local packages=(
+    curl
+    ca-certificates
+    gnupg
+    lsb-release
+    jq
+    whiptail
+    docker-ce
+    docker-ce-cli
+    containerd.io
+    docker-buildx-plugin
+    docker-compose-plugin
+  )
+
+  install -d -m 0755 "$manifest_dir"
+  generated_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+  {
+    printf '# OrderSys apt manifest\n'
+    printf 'generated_at=%s\n' "$generated_at"
+    for pkg in "${packages[@]}"; do
+      if dpkg-query -W -f='${Status}\t${Version}\n' "$pkg" 2>/dev/null | grep -q '^install ok installed'; then
+        printf '%s=%s\n' "$pkg" "$(dpkg-query -W -f='${Version}' "$pkg")"
+      else
+        printf '%s=missing\n' "$pkg"
+      fi
+    done
+  } > "$manifest_file"
+  chmod 644 "$manifest_file"
+}
+
 random_secret() {
   local output=""
   while [[ ${#output} -lt 48 ]]; do
@@ -394,6 +429,7 @@ install_path="$(prompt_input "OrderSys Installer" "Install path:" "$install_path
 if [[ "$mode" == "update" ]]; then
   compose_file="${install_path}/runtime/prod/docker-compose.yml"
   [[ -f "$compose_file" && -f "$env_file" ]] || { err "Existing install/env files are required for update-only mode."; exit 1; }
+  write_apt_manifest "$install_path"
   run_deploy_flow "$compose_file" "$env_file"
   update_http_port="${ORDERSYS_HTTP_PORT:-$(read_env_key "$env_file" ORDERSYS_HTTP_PORT)}"
   update_http_port="${update_http_port:-8080}"
@@ -414,6 +450,7 @@ http_port="${http_port:-8080}"
 
 install -d -m 0755 /etc/ordersys
 install -d -m 0755 "$install_path"
+write_apt_manifest "$install_path"
 
 compose_file="${install_path}/runtime/prod/docker-compose.yml"
 
@@ -438,9 +475,9 @@ else
   cors_origin="http://${host_ip}:${http_port}"
 fi
 
-backend_image="ghcr.io/robro92/ordersys-backend:0.5.2"
-frontend_image="ghcr.io/robro92/ordersys-frontend:0.5.2"
-proxy_image="ghcr.io/robro92/ordersys-proxy:0.5.2"
+backend_image="ghcr.io/robro92/ordersys-backend:0.5.3"
+frontend_image="ghcr.io/robro92/ordersys-frontend:0.5.3"
+proxy_image="ghcr.io/robro92/ordersys-proxy:0.5.3"
 
 if [[ "$backend_image" == __ORDERSYS_*__ || "$frontend_image" == __ORDERSYS_*__ || "$proxy_image" == __ORDERSYS_*__ ]]; then
   err "Installer image references are not rendered. Use the official release installer artifact."
@@ -448,7 +485,7 @@ if [[ "$backend_image" == __ORDERSYS_*__ || "$frontend_image" == __ORDERSYS_*__ 
 fi
 
 ghcr_org_value="robro92"
-app_version_value="0.5.2"
+app_version_value="0.5.3"
 
 if [[ "$ghcr_org_value" == __GHCR_*__ || -z "$ghcr_org_value" ]]; then
   ghcr_org_value="$(printf '%s' "$backend_image" | sed -E 's#^ghcr\.io/([^/]+)/.*$#\1#')"

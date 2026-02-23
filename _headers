@@ -1,0 +1,21 @@
+/update/stable.json
+  Cache-Control: public, max-age=60
+
+/update/stable.json.sig
+  Cache-Control: public, max-age=60
+
+/update/stable.json.sha256
+  Cache-Control: public, max-age=60
+
+/update/*.json
+  Cache-Control: public, max-age=31536000, immutable
+
+/update/*.sig
+  Cache-Control: public, max-age=31536000, immutable
+
+/update/*.sha256
+  Cache-Control: public, max-age=31536000, immutable
+
+/install
+  Cache-Control: public, max-age=300
+  Content-Type: text/plain; charset=utf-8

@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+info() {
+  printf '\033[1;34m[INFO]\033[0m %s\n' "$*"
+}
+
+success() {
+  printf '\033[1;32m[OK]\033[0m %s\n' "$*"
+}
+
+error() {
+  printf '\033[1;31m[ERROR]\033[0m %s\n' "$*" >&2
+}
+
+fail() {
+  error "$*"
+  exit 1
+}
+
+require_cmd() {
+  local cmd="$1"
+  local friendly="$2"
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    fail "$friendly is required but was not found in PATH."
+  fi
+}
+
+check_linux() {
+  [[ "$(uname -s)" == "Linux" ]] || fail "OrderSys installer currently supports Linux only."
+}
+
+check_not_root() {
+  [[ "$(id -u)" -ne 0 ]] || fail "Do not run this installer as root. Run as a regular user with sudo access."
+}
+
+check_debian12() {
+  local version_id=""
+  if command -v lsb_release >/dev/null 2>&1; then
+    version_id="$(lsb_release -rs 2>/dev/null || true)"
+  fi
+
+  if [[ -z "$version_id" && -f /etc/os-release ]]; then
+    # shellcheck disable=SC1091
+    . /etc/os-release
+    version_id="${VERSION_ID:-}"
+  fi
+
+  [[ "$version_id" == "12" ]] || fail "This installer currently supports Debian 12 only. Detected VERSION_ID='${version_id:-unknown}'."
+}
+
+check_docker_compose_plugin() {
+  docker compose version >/dev/null 2>&1 || fail "Docker Compose plugin is required. Install Docker with the compose plugin and try again."
+}
+
+main() {
+  info "Running OrderSys delivery bootstrap checks..."
+
+  check_linux
+  success "Linux OS check passed"
+
+  check_not_root
+  success "Root-user check passed"
+
+  check_debian12
+  success "Debian 12 check passed"
+
+  require_cmd curl "curl"
+  success "curl is available"
+
+  require_cmd docker "docker"
+  success "docker is available"
+
+  check_docker_compose_plugin
+  success "docker compose plugin is available"
+
+  printf '\n'
+  info "All prerequisite checks passed."
+  info "This is a generic installer placeholder with no embedded secrets."
+  info "Licence token is entered during setup."
+  info "Default update source: https://ordersys.stonewallmedia.co.uk/update/stable.json"
+
+  printf '\n'
+  info "Next steps (placeholder):"
+  printf '  1. Pull OrderSys runtime images from GHCR with your issued credentials.\n'
+  printf '  2. Configure environment values and your licence token.\n'
+  printf '  3. Start services using docker compose.\n'
+  printf '\n'
+  success "Installer placeholder completed."
+}
+
+main "$@"

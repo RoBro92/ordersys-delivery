@@ -16,6 +16,7 @@
   const installerModalTitle = document.getElementById("installerModalTitle");
   const installerScript = document.getElementById("installerScript");
   const currentVersion = document.getElementById("currentVersion");
+  const changelogSource = document.getElementById("changelogSource");
   const lastChecked = document.getElementById("lastChecked");
   const stableHealth = document.getElementById("stableHealth");
   const changelogHealth = document.getElementById("changelogHealth");
@@ -167,15 +168,19 @@
     lastChecked.textContent = new Date().toLocaleString();
   }
 
-  async function loadStable() {
-    stampCheckedTime();
+  function buildChangelogUrl(version) {
+    return `/update/changelog.md?v=${encodeURIComponent(version)}`;
+  }
+
+  async function loadReleaseStatus() {
+    let version = "";
     try {
       const response = await fetch("/update/stable.json", { cache: "no-store" });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
       const payload = await response.json();
-      const version = typeof payload.latest_version === "string" ? payload.latest_version.trim() : "";
+      version = typeof payload.latest_version === "string" ? payload.latest_version.trim() : "";
       if (!version) {
         throw new Error("latest_version missing");
       }
@@ -187,14 +192,23 @@
     } catch (_error) {
       currentVersion.textContent = "Unavailable";
       stableHealth.textContent = "FAIL";
+      changelogHealth.textContent = "Changelog unavailable";
+      if (changelogSource) {
+        changelogSource.textContent = "Unavailable";
+      }
       versionManifestLink.textContent = "/update/stable.json";
       versionManifestLink.setAttribute("href", "/update/stable.json");
+      stampCheckedTime();
+      return;
     }
-  }
 
-  async function loadChangelog() {
+    const changelogUrl = buildChangelogUrl(version);
+    if (changelogSource) {
+      changelogSource.textContent = changelogUrl;
+    }
+
     try {
-      const response = await fetch("/update/changelog.md", { cache: "no-store" });
+      const response = await fetch(changelogUrl, { cache: "no-store" });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
@@ -207,6 +221,8 @@
 
       if (lines.length === 0) {
         changelogHealth.textContent = "present (empty)";
+        changelogPreview.hidden = true;
+        stampCheckedTime();
         return;
       }
 
@@ -214,10 +230,12 @@
       changelogPreview.textContent = lines.join("\n");
       changelogPreview.hidden = false;
     } catch (_error) {
-      changelogHealth.textContent = "missing/unavailable";
+      changelogHealth.textContent = "Changelog unavailable";
+      changelogPreview.hidden = true;
+      changelogPreview.textContent = "";
     }
+    stampCheckedTime();
   }
 
-  void loadStable();
-  void loadChangelog();
+  void loadReleaseStatus();
 })();

@@ -1,4 +1,6 @@
 (() => {
+  const root = document.documentElement;
+  const themeToggle = document.getElementById("themeToggle");
   const installSection = document.getElementById("install");
   const installCommandEl = document.getElementById("installCommand");
   const updateCommandEl = document.getElementById("updateCommand");
@@ -20,6 +22,33 @@
   const changelogPreview = document.getElementById("changelogPreview");
   const versionManifestLink = document.getElementById("versionManifestLink");
   let cachedInstallerScript = null;
+
+  function getPreferredTheme() {
+    const saved = window.localStorage.getItem("ordersys-theme");
+    if (saved === "light" || saved === "dark") {
+      return saved;
+    }
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+
+  function applyTheme(theme) {
+    root.setAttribute("data-theme", theme);
+    if (themeToggle) {
+      themeToggle.textContent = theme === "dark" ? "Light mode" : "Dark mode";
+      themeToggle.setAttribute("aria-label", theme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+    }
+  }
+
+  applyTheme(getPreferredTheme());
+
+  if (themeToggle) {
+    themeToggle.addEventListener("click", () => {
+      const current = root.getAttribute("data-theme") === "dark" ? "dark" : "light";
+      const next = current === "dark" ? "light" : "dark";
+      applyTheme(next);
+      window.localStorage.setItem("ordersys-theme", next);
+    });
+  }
 
   if (installerModal) {
     installerModal.hidden = true;

@@ -1,6 +1,5 @@
 (() => {
   const installSection = document.getElementById("install");
-  const installCta = document.getElementById("installCta");
   const commandEl = document.getElementById("installCommand");
   const copyButton = document.getElementById("copyCommand");
   const copyResult = document.getElementById("copyResult");
@@ -11,12 +10,8 @@
   const changelogPreview = document.getElementById("changelogPreview");
   const versionManifestLink = document.getElementById("versionManifestLink");
 
-  if (installCta && installSection) {
-    installCta.addEventListener("click", () => {
-      window.setTimeout(() => {
-        installSection.focus({ preventScroll: true });
-      }, 0);
-    });
+  if (installSection && window.location.hash === "#install") {
+    installSection.focus({ preventScroll: true });
   }
 
   async function copyCommand() {

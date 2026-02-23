@@ -54,7 +54,11 @@ install_docker_if_missing() {
 }
 
 random_secret() {
-  tr -dc 'A-Za-z0-9' </dev/urandom | head -c 48
+  local output=""
+  while [[ ${#output} -lt 48 ]]; do
+    output+=$(head -c 256 /dev/urandom | tr -dc 'A-Za-z0-9')
+  done
+  printf '%s' "${output:0:48}"
 }
 
 prompt_input() {
@@ -421,13 +425,13 @@ if [[ -z "$ghcr_token" ]]; then
   ghcr_token="$(prompt_password "OrderSys Installer" "GHCR token/PAT (optional for public images):")"
 fi
 
-backend_image="${ORDERSYS_BACKEND_IMAGE:-ghcr.io/robro92/ordersys-backend:0.3.0}"
-frontend_image="${ORDERSYS_FRONTEND_IMAGE:-ghcr.io/robro92/ordersys-frontend:0.3.0}"
-proxy_image="${ORDERSYS_PROXY_IMAGE:-ghcr.io/robro92/ordersys-proxy:0.3.0}"
+backend_image="${ORDERSYS_BACKEND_IMAGE:-ghcr.io/robro92/ordersys-backend:0.3.1}"
+frontend_image="${ORDERSYS_FRONTEND_IMAGE:-ghcr.io/robro92/ordersys-frontend:0.3.1}"
+proxy_image="${ORDERSYS_PROXY_IMAGE:-ghcr.io/robro92/ordersys-proxy:0.3.1}"
 
-if [[ "$backend_image" == "ghcr.io/robro92/ordersys-backend:0.3.0" || "$frontend_image" == "ghcr.io/robro92/ordersys-frontend:0.3.0" || "$proxy_image" == "ghcr.io/robro92/ordersys-proxy:0.3.0" ]]; then
+if [[ "$backend_image" == "ghcr.io/robro92/ordersys-backend:0.3.1" || "$frontend_image" == "ghcr.io/robro92/ordersys-frontend:0.3.1" || "$proxy_image" == "ghcr.io/robro92/ordersys-proxy:0.3.1" ]]; then
   ghcr_org="$(prompt_input "OrderSys Installer" "GHCR organisation/user for OrderSys images:" "")"
-  release_version="$(prompt_input "OrderSys Installer" "Release version (X.Y.Z):" "0.3.0")"
+  release_version="$(prompt_input "OrderSys Installer" "Release version (X.Y.Z):" "0.3.1")"
   [[ -n "$ghcr_org" && -n "$release_version" ]] || { err "Image org and release version are required."; exit 1; }
   backend_image="ghcr.io/${ghcr_org}/ordersys-backend:${release_version}"
   frontend_image="ghcr.io/${ghcr_org}/ordersys-frontend:${release_version}"
@@ -436,13 +440,13 @@ if [[ "$backend_image" == "ghcr.io/robro92/ordersys-backend:0.3.0" || "$frontend
   app_version_value="$release_version"
 else
   ghcr_org_value="robro92"
-  app_version_value="0.3.0"
+  app_version_value="0.3.1"
 fi
 
 if [[ "$ghcr_org_value" == "robro92" || -z "$ghcr_org_value" ]]; then
   ghcr_org_value="$(printf '%s' "$backend_image" | sed -E 's#^ghcr\.io/([^/]+)/.*$#\1#')"
 fi
-if [[ "$app_version_value" == "0.3.0" || -z "$app_version_value" ]]; then
+if [[ "$app_version_value" == "0.3.1" || -z "$app_version_value" ]]; then
   app_version_value="$(printf '%s' "$backend_image" | sed -E 's#^.*:([^:]+)$#\1#')"
 fi
 

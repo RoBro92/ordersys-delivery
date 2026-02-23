@@ -277,6 +277,7 @@ KEY
 run_deploy_flow() {
   local compose_file="$1"
   local env_file="$2"
+  local migration_log
 
   log "Pulling images..."
   docker compose -p ordersys --env-file "$env_file" -f "$compose_file" pull
@@ -285,7 +286,15 @@ run_deploy_flow() {
   docker compose -p ordersys --env-file "$env_file" -f "$compose_file" up -d
 
   log "Applying migrations..."
-  docker compose -p ordersys --env-file "$env_file" -f "$compose_file" run --rm backend alembic upgrade head
+  migration_log="$(mktemp)"
+  if ! docker compose -p ordersys --env-file "$env_file" -f "$compose_file" run --rm backend alembic upgrade head >"$migration_log" 2>&1; then
+    err "Database migration failed. Recent migration output:"
+    tail -n 80 "$migration_log" >&2
+    rm -f "$migration_log"
+    exit 1
+  fi
+  rm -f "$migration_log"
+  ok "Database migrations complete."
 
   docker compose -p ordersys --env-file "$env_file" -f "$compose_file" up -d
 }
@@ -469,6 +478,8 @@ else
 fi
 
 ok "OrderSys installation complete."
+whiptail --title "OrderSys Installer" --msgbox "OrderSys installation finished.\n\nOpen: ${access_url}\n\nRun setup wizard to create admin and start trial or apply a vendor key." 14 78
+
 cat <<NEXT
 
 Next steps:
@@ -480,5 +491,3 @@ Next steps:
 - Logs: docker compose -p ordersys --env-file ${env_file} -f ${compose_file} logs -f
 
 NEXT
-
-whiptail --title "OrderSys Installer" --msgbox "OrderSys installation finished.\n\nOpen: ${access_url}\n\nRun setup wizard to create admin and start trial or apply a vendor key." 14 78

@@ -62,29 +62,37 @@ body {
 .brand {
   display: flex;
   gap: 0.95rem;
-  align-items: flex-start;
+  align-items: center;
 }
 
 .brand-thumb {
-  width: 44px;
-  height: 44px;
+  width: clamp(44px, 6vw, 56px);
+  height: auto;
+  flex: 0 0 auto;
   border-radius: 10px;
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.25);
 }
 
+.brand-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .brand-title {
-  margin: 0;
+  margin: 0 0 0.28rem;
   line-height: 1;
 }
 
 .brand-text-logo {
   display: block;
-  width: min(260px, 62vw);
+  width: clamp(240px, 42vw, 360px);
+  max-width: 100%;
   height: auto;
 }
 
 .subtitle {
-  margin: 0.42rem 0 0;
+  margin: 0;
   color: var(--muted);
   font-size: 1.06rem;
 }

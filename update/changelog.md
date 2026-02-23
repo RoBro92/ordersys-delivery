@@ -1,23 +1,21 @@
-## v0.5.0 (2026-02-23)
+## v0.5.1 (2026-02-23)
 
 Added:
-- Public installer and update delivery flow now publishes each stable release automatically.
-- Improved operator landing page with clearer release/status visibility and direct installer/update references.
-- Public changelog delivery now follows a stable customer-facing format per release.
+- Stronger licence entitlement checks before updates are applied, with clearer operator messaging when an update is not permitted.
 
 Fixed:
-- Installer reliability issues that could interrupt setup in some environments.
-- Public changelog freshness issues on the delivery homepage.
+- Trial behaviour could previously be too permissive for update and data-transfer operations in some flows.
 
 Changed:
-- Release distribution now consistently ships signed update metadata and release-specific changelog content.
-- Update/release messaging is clearer for operators evaluating or maintaining installations.
+- Trial licences are now limited to 7 days with tighter server-side enforcement.
+- Public update delivery now exposes only the current stable release payload.
 
 Security:
-- Signed update manifest delivery remains enforced for stable releases.
-- Public release notes are filtered to user-relevant information only.
+- Trial licences can no longer run in-place updates.
+- Trial licences are now blocked from database transfer operations (import/export/restore style actions).
+- Update eligibility is enforced server-side before updater execution continues.
 
 Upgrade notes:
-- Continue using the same stable update endpoint; no URL changes are required.
-- Existing installations can update normally using the standard update process.
+- Trial environments will not be able to run update actions until a paid licence is applied.
+- Existing annual/lifetime installations should continue using the normal update process.
 

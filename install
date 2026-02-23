@@ -68,12 +68,6 @@ prompt_input() {
   whiptail --title "$title" --inputbox "$prompt" 10 78 "$default_value" 3>&1 1>&2 2>&3
 }
 
-prompt_password() {
-  local title="$1"
-  local prompt="$2"
-  whiptail --title "$title" --passwordbox "$prompt" 10 78 3>&1 1>&2 2>&3
-}
-
 upsert_env_key() {
   local env_file="$1"
   local key="$2"
@@ -157,6 +151,7 @@ services:
       ALLOW_UPDATE_SOURCE_OVERRIDE: ${ALLOW_UPDATE_SOURCE_OVERRIDE:-false}
       LICENSE_PUBLIC_KEY_PEM: ${LICENSE_PUBLIC_KEY_PEM:-}
       LICENSE_PUBLIC_KEY_PEM_FILE: ${LICENSE_PUBLIC_KEY_PEM_FILE:-/opt/ordersys/keys/license_public.pem}
+      ORDERSYS_INSTANCE_ID_FILE: ${ORDERSYS_INSTANCE_ID_FILE:-/var/lib/ordersys/instance_id}
       DB_HOST: db
       DB_PORT: "5432"
       DB_NAME: ordersys
@@ -168,6 +163,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    volumes:
+      - ordersys_state:/var/lib/ordersys
 
   frontend:
     image: ${ORDERSYS_FRONTEND_IMAGE}
@@ -191,6 +188,7 @@ services:
 
 volumes:
   postgres_data:
+  ordersys_state:
 YAML
 
   cat > "$nginx_file" <<'NGINX'
@@ -276,20 +274,6 @@ KEY
   chmod 600 "$key_file"
 }
 
-docker_login_if_configured() {
-  local registry="$1"
-  local user="$2"
-  local token="$3"
-
-  if [[ -z "$user" || -z "$token" ]]; then
-    warn "Skipping docker login (no GHCR credentials provided)."
-    return
-  fi
-
-  log "Authenticating Docker to ${registry}..."
-  printf '%s' "$token" | docker login "$registry" -u "$user" --password-stdin >/dev/null
-}
-
 run_deploy_flow() {
   local compose_file="$1"
   local env_file="$2"
@@ -330,7 +314,7 @@ if ! grep -q '^12' /etc/debian_version; then
   warn "Debian 12 is the supported target. Continuing anyway."
 fi
 
-whiptail --title "OrderSys Installer" --msgbox "This installer deploys OrderSys in production mode.\n\nNo DEV toggles are enabled." 11 74
+whiptail --title "OrderSys Installer" --msgbox "This installer deploys OrderSys in production mode.\n\nDevelopment image/version overrides are disabled in this installer." 11 78
 
 ensure_base_packages
 install_docker_if_missing
@@ -359,13 +343,6 @@ install_path="$(prompt_input "OrderSys Installer" "Install path:" "$install_path
 if [[ "$mode" == "update" ]]; then
   compose_file="${install_path}/runtime/prod/docker-compose.yml"
   [[ -f "$compose_file" && -f "$env_file" ]] || { err "Existing install/env files are required for update-only mode."; exit 1; }
-
-  ghcr_registry="$(read_env_key "$env_file" GHCR_REGISTRY)"
-  ghcr_registry="${ghcr_registry:-ghcr.io}"
-  ghcr_user="${ORDERSYS_GHCR_USERNAME:-$(read_env_key "$env_file" GHCR_USERNAME)}"
-  ghcr_token="${ORDERSYS_GHCR_TOKEN:-$(read_env_key "$env_file" GHCR_TOKEN)}"
-
-  docker_login_if_configured "$ghcr_registry" "$ghcr_user" "$ghcr_token"
   run_deploy_flow "$compose_file" "$env_file"
   update_http_port="${ORDERSYS_HTTP_PORT:-$(read_env_key "$env_file" ORDERSYS_HTTP_PORT)}"
   update_http_port="${update_http_port:-8080}"
@@ -404,49 +381,22 @@ else
   cors_origin="http://${host_ip}:${http_port}"
 fi
 
-ghcr_registry="${ORDERSYS_GHCR_REGISTRY:-ghcr.io}"
-ghcr_user="${ORDERSYS_GHCR_USERNAME:-}"
-ghcr_token="${ORDERSYS_GHCR_TOKEN:-}"
+backend_image="ghcr.io/robro92/ordersys-backend:0.5.1"
+frontend_image="ghcr.io/robro92/ordersys-frontend:0.5.1"
+proxy_image="ghcr.io/robro92/ordersys-proxy:0.5.1"
 
-if [[ "$ghcr_registry" == "ghcr.io" || -z "$ghcr_registry" ]]; then
-  ghcr_registry="ghcr.io"
-fi
-if [[ "$ghcr_user" == "" ]]; then
-  ghcr_user=""
-fi
-if [[ "$ghcr_token" == "" ]]; then
-  ghcr_token=""
+if [[ "$backend_image" == "ghcr.io/robro92/ordersys-backend:0.5.1" || "$frontend_image" == "ghcr.io/robro92/ordersys-frontend:0.5.1" || "$proxy_image" == "ghcr.io/robro92/ordersys-proxy:0.5.1" ]]; then
+  err "Installer image references are not rendered. Use the official release installer artifact."
+  exit 1
 fi
 
-if [[ -z "$ghcr_user" ]]; then
-  ghcr_user="$(prompt_input "OrderSys Installer" "GHCR username (optional for public images):" "")"
-fi
-if [[ -z "$ghcr_token" ]]; then
-  ghcr_token="$(prompt_password "OrderSys Installer" "GHCR token/PAT (optional for public images):")"
-fi
-
-backend_image="${ORDERSYS_BACKEND_IMAGE:-ghcr.io/robro92/ordersys-backend:0.5.0}"
-frontend_image="${ORDERSYS_FRONTEND_IMAGE:-ghcr.io/robro92/ordersys-frontend:0.5.0}"
-proxy_image="${ORDERSYS_PROXY_IMAGE:-ghcr.io/robro92/ordersys-proxy:0.5.0}"
-
-if [[ "$backend_image" == "ghcr.io/robro92/ordersys-backend:0.5.0" || "$frontend_image" == "ghcr.io/robro92/ordersys-frontend:0.5.0" || "$proxy_image" == "ghcr.io/robro92/ordersys-proxy:0.5.0" ]]; then
-  ghcr_org="$(prompt_input "OrderSys Installer" "GHCR organisation/user for OrderSys images:" "")"
-  release_version="$(prompt_input "OrderSys Installer" "Release version (X.Y.Z):" "0.5.0")"
-  [[ -n "$ghcr_org" && -n "$release_version" ]] || { err "Image org and release version are required."; exit 1; }
-  backend_image="ghcr.io/${ghcr_org}/ordersys-backend:${release_version}"
-  frontend_image="ghcr.io/${ghcr_org}/ordersys-frontend:${release_version}"
-  proxy_image="ghcr.io/${ghcr_org}/ordersys-proxy:${release_version}"
-  ghcr_org_value="$ghcr_org"
-  app_version_value="$release_version"
-else
-  ghcr_org_value="robro92"
-  app_version_value="0.5.0"
-fi
+ghcr_org_value="robro92"
+app_version_value="0.5.1"
 
 if [[ "$ghcr_org_value" == "robro92" || -z "$ghcr_org_value" ]]; then
   ghcr_org_value="$(printf '%s' "$backend_image" | sed -E 's#^ghcr\.io/([^/]+)/.*$#\1#')"
 fi
-if [[ "$app_version_value" == "0.5.0" || -z "$app_version_value" ]]; then
+if [[ "$app_version_value" == "0.5.1" || -z "$app_version_value" ]]; then
   app_version_value="$(printf '%s' "$backend_image" | sed -E 's#^.*:([^:]+)$#\1#')"
 fi
 
@@ -458,9 +408,6 @@ upsert_env_key "$env_file" APP_RUNTIME_MODE "PROD"
 upsert_env_key "$env_file" APP_VERSION "$app_version_value"
 upsert_env_key "$env_file" ORDERSYS_VERSION "$app_version_value"
 upsert_env_key "$env_file" GHCR_ORG "$ghcr_org_value"
-upsert_env_key "$env_file" GHCR_REGISTRY "$ghcr_registry"
-upsert_env_key "$env_file" GHCR_USERNAME "$ghcr_user"
-upsert_env_key "$env_file" GHCR_TOKEN "$ghcr_token"
 upsert_env_key "$env_file" JWT_SECRET_KEY "$jwt_secret"
 upsert_env_key "$env_file" DB_PASSWORD "$db_password"
 upsert_env_key "$env_file" CORS_ALLOW_ORIGINS "$cors_origin"
@@ -478,6 +425,7 @@ upsert_env_key "$env_file" UPDATE_FETCH_TOTAL_TIMEOUT_SECONDS "30"
 upsert_env_key "$env_file" UPDATE_FETCH_MAX_REDIRECTS "3"
 upsert_env_key "$env_file" LICENSE_PUBLIC_KEY_PEM ""
 upsert_env_key "$env_file" LICENSE_PUBLIC_KEY_PEM_FILE "${install_path}/keys/license_public.pem"
+upsert_env_key "$env_file" ORDERSYS_INSTANCE_ID_FILE "/var/lib/ordersys/instance_id"
 upsert_env_key "$env_file" ORDERSYS_HTTP_PORT "$http_port"
 upsert_env_key "$env_file" ORDERSYS_BACKEND_IMAGE "$backend_image"
 upsert_env_key "$env_file" ORDERSYS_FRONTEND_IMAGE "$frontend_image"
@@ -494,7 +442,6 @@ if ! id "$DEPLOY_USER" >/dev/null 2>&1; then
 fi
 chown -R "$DEPLOY_USER":"$DEPLOY_USER" "$install_path"
 
-docker_login_if_configured "$ghcr_registry" "$ghcr_user" "$ghcr_token"
 run_deploy_flow "$compose_file" "$env_file"
 verify_health "$http_port"
 

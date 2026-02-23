@@ -15,7 +15,11 @@ Hosted endpoints:
 
 ## Publishing Flow
 
-Release artefacts are published automatically by the main `ordersys` repository release process.
+Production release artefacts are published automatically by the main `ordersys` repository release process.
+The expected publish source is signed release output from `ordersys` (`dist/install` and `dist/update/*`).
+
+Placeholders are acceptable only for initial scaffolding/testing and are not acceptable for production publishing.
+Signature (`*.sig`) and checksum (`*.sha256`) files must contain real release-generated values for live deployments.
 
 ## Deployment
 
@@ -26,4 +30,9 @@ This repository is deployed via Cloudflare Pages:
 
 ## Security
 
-No secrets, private keys, or customer-specific data are stored in this repository.
+This repository must remain secret-free at all times:
+- no private keys
+- no API tokens
+- no customer-specific data
+
+Only public install/update artefacts should be committed here.

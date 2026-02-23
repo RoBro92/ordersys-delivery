@@ -1,0 +1,6 @@
+install               text eol=lf
+update/*.json         text eol=lf
+update/*.sig          text eol=lf
+update/*.sha256       text eol=lf
+_headers              text eol=lf
+*.md                  text eol=lf

@@ -202,6 +202,7 @@ services:
         condition: service_healthy
     volumes:
       - ordersys_state:/var/lib/ordersys
+      - ${LICENSE_PUBLIC_KEY_PEM_FILE:-/opt/ordersys/keys/license_public.pem}:${LICENSE_PUBLIC_KEY_PEM_FILE:-/opt/ordersys/keys/license_public.pem}:ro
 
   frontend:
     image: ${ORDERSYS_FRONTEND_IMAGE}
@@ -430,6 +431,11 @@ if [[ "$mode" == "update" ]]; then
   compose_file="${install_path}/runtime/prod/docker-compose.yml"
   [[ -f "$compose_file" && -f "$env_file" ]] || { err "Existing install/env files are required for update-only mode."; exit 1; }
   write_apt_manifest "$install_path"
+  install -d -m 0755 "${install_path}/keys"
+  write_license_public_key_file "${install_path}/keys/license_public.pem"
+  upsert_env_key "$env_file" LICENSE_PUBLIC_KEY_PEM ""
+  upsert_env_key "$env_file" LICENSE_PUBLIC_KEY_PEM_FILE "${install_path}/keys/license_public.pem"
+  upsert_env_key "$env_file" UPDATE_MANIFEST_PUBLIC_KEY_PEM_FILE "${install_path}/keys/license_public.pem"
   run_deploy_flow "$compose_file" "$env_file"
   update_http_port="${ORDERSYS_HTTP_PORT:-$(read_env_key "$env_file" ORDERSYS_HTTP_PORT)}"
   update_http_port="${update_http_port:-8080}"
@@ -475,9 +481,9 @@ else
   cors_origin="http://${host_ip}:${http_port}"
 fi
 
-backend_image="ghcr.io/robro92/ordersys-backend:0.5.3"
-frontend_image="ghcr.io/robro92/ordersys-frontend:0.5.3"
-proxy_image="ghcr.io/robro92/ordersys-proxy:0.5.3"
+backend_image="ghcr.io/robro92/ordersys-backend:0.5.4"
+frontend_image="ghcr.io/robro92/ordersys-frontend:0.5.4"
+proxy_image="ghcr.io/robro92/ordersys-proxy:0.5.4"
 
 if [[ "$backend_image" == __ORDERSYS_*__ || "$frontend_image" == __ORDERSYS_*__ || "$proxy_image" == __ORDERSYS_*__ ]]; then
   err "Installer image references are not rendered. Use the official release installer artifact."
@@ -485,7 +491,7 @@ if [[ "$backend_image" == __ORDERSYS_*__ || "$frontend_image" == __ORDERSYS_*__ 
 fi
 
 ghcr_org_value="robro92"
-app_version_value="0.5.3"
+app_version_value="0.5.4"
 
 if [[ "$ghcr_org_value" == __GHCR_*__ || -z "$ghcr_org_value" ]]; then
   ghcr_org_value="$(printf '%s' "$backend_image" | sed -E 's#^ghcr\.io/([^/]+)/.*$#\1#')"

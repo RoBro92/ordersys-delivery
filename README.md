@@ -10,6 +10,8 @@ This repo hosts public delivery endpoints for installer/bootstrap and update met
 
 Hosted endpoints:
 - `/install`
+- `/update` (redirects to `/update.sh`)
+- `/update.sh`
 - `/update/stable.json`
 - `/update/<latest-version>.json` (current stable release only)
 
@@ -28,6 +30,16 @@ This repository is deployed via Cloudflare Pages:
 - no build step
 - root directory output
 - pure static hosting
+
+## Hosted Updater Usage
+
+The hosted updater is a thin wrapper around the local OrderSys CLI:
+
+- `curl -fsSL https://ordersys.stonewallmedia.co.uk/update.sh | bash`
+- `curl -fsSL https://ordersys.stonewallmedia.co.uk/update | bash`
+
+The script verifies vendor manifest integrity and delegates to the local
+`ordersys update` command on the target host.
 
 ## Security
 

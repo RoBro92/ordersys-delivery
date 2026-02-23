@@ -139,7 +139,7 @@
   if (viewUpdateBtn && installerModal) {
     viewUpdateBtn.addEventListener("click", () => {
       installerModal.hidden = false;
-      void loadScript("/update/ordersys-update.sh", "Update Script", "/update/ordersys-update.sh");
+      void loadScript("/update.sh", "Update Script", "/update.sh");
     });
   }
 

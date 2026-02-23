@@ -213,13 +213,9 @@
         throw new Error(`HTTP ${response.status}`);
       }
       const text = await response.text();
-      const lines = text
-        .split(/\r?\n/)
-        .map((line) => line.trimEnd())
-        .filter((line) => line.trim().length > 0)
-        .slice(0, 25);
+      const content = text.replace(/\s+$/, "");
 
-      if (lines.length === 0) {
+      if (!content.trim()) {
         changelogHealth.textContent = "present (empty)";
         changelogPreview.hidden = true;
         stampCheckedTime();
@@ -227,7 +223,7 @@
       }
 
       changelogHealth.textContent = "present";
-      changelogPreview.textContent = lines.join("\n");
+      changelogPreview.textContent = content;
       changelogPreview.hidden = false;
     } catch (_error) {
       changelogHealth.textContent = "Changelog unavailable";

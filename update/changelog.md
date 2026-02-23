@@ -1,21 +1,19 @@
-## v0.5.1 (2026-02-23)
+## v0.5.2 (2026-02-23)
 
 Added:
-- Stronger licence entitlement checks before updates are applied, with clearer operator messaging when an update is not permitted.
+- Production installer support for Debian 13 hosts.
 
 Fixed:
-- Trial behaviour could previously be too permissive for update and data-transfer operations in some flows.
+- Debian version detection now correctly recognizes Debian 13 during install checks.
 
 Changed:
-- Trial licences are now limited to 7 days with tighter server-side enforcement.
-- Public update delivery now exposes only the current stable release payload.
+- Debian 12 and Debian 13 are now the validated installer targets.
+- Public supported-host guidance now reflects Debian 12 and Debian 13 support.
 
 Security:
-- Trial licences can no longer run in-place updates.
-- Trial licences are now blocked from database transfer operations (import/export/restore style actions).
-- Update eligibility is enforced server-side before updater execution continues.
+- No change to manifest signing or updater verification requirements.
 
 Upgrade notes:
-- Trial environments will not be able to run update actions until a paid licence is applied.
-- Existing annual/lifetime installations should continue using the normal update process.
+- Existing Debian 12 installations are unaffected.
+- Debian 13 hosts can use the standard installer command with no extra flags.
 

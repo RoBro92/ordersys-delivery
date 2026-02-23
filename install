@@ -310,8 +310,22 @@ if [[ ! -f /etc/debian_version ]]; then
   err "This installer currently targets Debian hosts."
   exit 1
 fi
-if ! grep -q '^12' /etc/debian_version; then
-  warn "Debian 12 is the supported target. Continuing anyway."
+
+debian_major=""
+if [[ -r /etc/os-release ]]; then
+  debian_id="$(awk -F= '/^ID=/{gsub(/"/, "", $2); print $2}' /etc/os-release | head -n1)"
+  if [[ "$debian_id" != "debian" ]]; then
+    err "Unsupported distro ID: ${debian_id:-unknown}. This installer targets Debian 12/13."
+    exit 1
+  fi
+  debian_version_id="$(awk -F= '/^VERSION_ID=/{gsub(/"/, "", $2); print $2}' /etc/os-release | head -n1)"
+  debian_major="${debian_version_id%%.*}"
+fi
+if [[ -z "$debian_major" ]]; then
+  debian_major="$(sed -n '1s/^\([0-9][0-9]*\).*/\1/p' /etc/debian_version | head -n1)"
+fi
+if [[ "$debian_major" != "12" && "$debian_major" != "13" ]]; then
+  warn "Debian 12 and Debian 13 are validated targets. Detected Debian ${debian_major:-unknown}. Continuing anyway."
 fi
 
 whiptail --title "OrderSys Installer" --msgbox "This installer deploys OrderSys in production mode.\n\nDevelopment image/version overrides are disabled in this installer." 11 78
@@ -381,22 +395,22 @@ else
   cors_origin="http://${host_ip}:${http_port}"
 fi
 
-backend_image="ghcr.io/robro92/ordersys-backend:0.5.1"
-frontend_image="ghcr.io/robro92/ordersys-frontend:0.5.1"
-proxy_image="ghcr.io/robro92/ordersys-proxy:0.5.1"
+backend_image="ghcr.io/robro92/ordersys-backend:0.5.2"
+frontend_image="ghcr.io/robro92/ordersys-frontend:0.5.2"
+proxy_image="ghcr.io/robro92/ordersys-proxy:0.5.2"
 
-if [[ "$backend_image" == "ghcr.io/robro92/ordersys-backend:0.5.1" || "$frontend_image" == "ghcr.io/robro92/ordersys-frontend:0.5.1" || "$proxy_image" == "ghcr.io/robro92/ordersys-proxy:0.5.1" ]]; then
+if [[ "$backend_image" == "ghcr.io/robro92/ordersys-backend:0.5.2" || "$frontend_image" == "ghcr.io/robro92/ordersys-frontend:0.5.2" || "$proxy_image" == "ghcr.io/robro92/ordersys-proxy:0.5.2" ]]; then
   err "Installer image references are not rendered. Use the official release installer artifact."
   exit 1
 fi
 
 ghcr_org_value="robro92"
-app_version_value="0.5.1"
+app_version_value="0.5.2"
 
 if [[ "$ghcr_org_value" == "robro92" || -z "$ghcr_org_value" ]]; then
   ghcr_org_value="$(printf '%s' "$backend_image" | sed -E 's#^ghcr\.io/([^/]+)/.*$#\1#')"
 fi
-if [[ "$app_version_value" == "0.5.1" || -z "$app_version_value" ]]; then
+if [[ "$app_version_value" == "0.5.2" || -z "$app_version_value" ]]; then
   app_version_value="$(printf '%s' "$backend_image" | sed -E 's#^.*:([^:]+)$#\1#')"
 fi
 

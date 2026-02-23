@@ -400,8 +400,8 @@ if [[ "$mode" == "update" ]]; then
   access_url="http://${host_ip}:${update_http_port}"
   dns_hint="If using a hostname, keep DNS mapped to this host and ensure proxy port ${update_http_port} is reachable."
   ok "Update-only flow completed."
-  show_next_steps "$access_url" "$dns_hint" "$compose_file" "$env_file"
   show_completion_dialog "$access_url"
+  show_next_steps "$access_url" "$dns_hint" "$compose_file" "$env_file"
   exit 0
 fi
 
@@ -509,5 +509,5 @@ else
 fi
 
 ok "OrderSys installation complete."
-show_next_steps "$access_url" "$dns_hint" "$compose_file" "$env_file"
 show_completion_dialog "$access_url"
+show_next_steps "$access_url" "$dns_hint" "$compose_file" "$env_file"

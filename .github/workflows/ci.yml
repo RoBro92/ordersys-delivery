@@ -7,9 +7,32 @@ on:
 jobs:
   validate-delivery:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install validator dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ripgrep jq
+
+      # TODO(PR-D1c): Remove this temporary allowance after first real
+      # PR-D2 publish replaces placeholders with signed checksum/sig files.
+      - name: Detect temporary placeholder allowance
+        id: placeholders
+        run: |
+          set -euo pipefail
+          allow="false"
+          if [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+            if rg -n 'SIGNATURE_PLACEHOLDER' update/*.sig >/dev/null 2>&1 || \
+               rg -n 'SHA256_PLACEHOLDER' update/*.sha256 >/dev/null 2>&1; then
+              allow="true"
+            fi
+          fi
+          echo "allow=${allow}" >> "${GITHUB_OUTPUT}"
+
       - name: Validate delivery contract
+        env:
+          ALLOW_PLACEHOLDERS: ${{ steps.placeholders.outputs.allow }}
         run: scripts/validate-delivery.sh

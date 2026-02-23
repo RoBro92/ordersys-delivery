@@ -3,139 +3,110 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>OrderSys Delivery</title>
-  <style>
-    :root {
-      color-scheme: light;
-      --bg: #f5f7fb;
-      --panel: #ffffff;
-      --text: #0f172a;
-      --muted: #475569;
-      --line: #dbe3ef;
-      --brand: #1455c0;
-      --brand-hover: #0f3f90;
-      --ok: #166534;
-      --warn: #9a3412;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(180deg, #eef3fb 0%, var(--bg) 50%, #edf2f9 100%);
-      color: var(--text);
-      line-height: 1.45;
-    }
-
-    main {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 48px 20px;
-    }
-
-    .hero {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 28px;
-      box-shadow: 0 8px 30px rgba(15, 23, 42, 0.06);
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(2rem, 5vw, 2.8rem);
-      letter-spacing: -0.02em;
-    }
-
-    .tagline {
-      margin: 8px 0 0;
-      color: var(--muted);
-      font-size: 1.02rem;
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 22px;
-    }
-
-    .btn {
-      display: inline-block;
-      text-decoration: none;
-      border: 1px solid var(--brand);
-      color: #fff;
-      background: var(--brand);
-      padding: 10px 14px;
-      border-radius: 9px;
-      font-weight: 600;
-      font-size: 0.95rem;
-    }
-
-    .btn:hover { background: var(--brand-hover); border-color: var(--brand-hover); }
-
-    .btn.secondary {
-      color: var(--brand);
-      background: #fff;
-    }
-
-    .status {
-      margin-top: 18px;
-      border-top: 1px solid var(--line);
-      padding-top: 18px;
-    }
-
-    .status h2 {
-      margin: 0 0 8px;
-      font-size: 1.05rem;
-    }
-
-    .status-line {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
-
-    .status-line.ok { color: var(--ok); }
-    .status-line.warn { color: var(--warn); }
-
-    pre {
-      margin-top: 12px;
-      padding: 12px;
-      border-radius: 10px;
-      background: #0b1220;
-      color: #e2e8f0;
-      border: 1px solid #1e293b;
-      overflow-x: auto;
-      white-space: pre-wrap;
-      word-break: break-word;
-      font-size: 0.85rem;
-    }
-  </style>
+  <title>OrderSys Delivery Portal</title>
+  <meta name="description" content="OrderSys delivery and installer endpoint for IT operators and evaluators.">
+  <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
-  <main>
-    <section class="hero">
-      <h1>OrderSys</h1>
-      <p class="tagline">On-prem ordering and receiving system</p>
+  <div class="page-bg" aria-hidden="true"></div>
+  <header class="hero container" id="top">
+    <div class="brand">
+      <img src="/assets/ordersys-logo.svg" alt="OrderSys logo" width="44" height="44">
+      <div>
+        <h1>OrderSys</h1>
+        <p class="subtitle">On-prem ordering and receiving system</p>
+        <p class="note">Delivery &amp; installer endpoint</p>
+      </div>
+    </div>
 
-      <nav class="actions" aria-label="Primary actions">
-        <a class="btn" href="/install">Install</a>
-        <a class="btn secondary" href="https://www.stonewallmedia.co.uk/ordersys/">Documentation</a>
-        <a class="btn secondary" href="/update/stable.json">Update manifest</a>
-        <a class="btn secondary" href="/update/changelog.md">Changelog</a>
-      </nav>
+    <nav class="hero-actions" aria-label="Primary actions">
+      <a class="btn btn-primary" href="#install" id="installCta">Install OrderSys</a>
+      <a class="btn btn-secondary" href="/install" target="_blank" rel="noopener noreferrer">View installer script</a>
+      <a class="btn btn-tertiary" href="https://www.stonewallmedia.co.uk/ordersys/" target="_blank" rel="noopener noreferrer">Documentation</a>
+    </nav>
+  </header>
 
-      <section class="status" aria-live="polite">
-        <h2>Status</h2>
-        <p id="versionStatus" class="status-line">Checking current version...</p>
-        <p id="changelogStatus" class="status-line">Checking changelog...</p>
-        <pre id="changelogPreview" hidden></pre>
-      </section>
+  <main class="container grid">
+    <section class="card" id="install" tabindex="-1" aria-labelledby="installTitle">
+      <h2 id="installTitle">Install</h2>
+      <p class="section-text">Run the bootstrap installer on the target host:</p>
+      <div class="command-wrap">
+        <pre class="command" id="installCommand">curl -fsSL https://ordersys.stonewallmedia.co.uk/install | bash</pre>
+        <button class="copy-btn" id="copyCommand" type="button">Copy</button>
+      </div>
+      <p class="small" id="copyResult" aria-live="polite"></p>
+
+      <details class="details">
+        <summary>Show more</summary>
+        <p class="section-text">The installer performs prerequisite checks, validates host compatibility, and guides setup for runtime components. This endpoint provides delivery artefacts only; no credentials are embedded.</p>
+      </details>
+
+      <div class="verify-box">
+        <p><strong>Verify URL:</strong> Installer is hosted at <code>ordersys.stonewallmedia.co.uk</code>.</p>
+        <p><strong>Licence token:</strong> Entered during setup (after install).</p>
+      </div>
+    </section>
+
+    <section class="card" id="hosts" aria-labelledby="hostsTitle">
+      <h2 id="hostsTitle">Supported Hosts</h2>
+      <div class="table-wrap">
+        <table>
+          <tbody>
+            <tr>
+              <th>Supported OS</th>
+              <td>Debian 12 (Bookworm) ✅</td>
+            </tr>
+            <tr>
+              <th>CPU</th>
+              <td>x86_64 (amd64) ✅<br>arm64: not yet supported</td>
+            </tr>
+            <tr>
+              <th>Requirements</th>
+              <td>Docker Engine + Docker Compose plugin<br>Internet access required for updates and image pulls</td>
+            </tr>
+            <tr>
+              <th>Network</th>
+              <td>LAN-first default; external exposure requires HTTPS enforcement</td>
+            </tr>
+            <tr>
+              <th>Storage</th>
+              <td><span class="muted">Recommendation:</span> at least 10 GB free disk space</td>
+            </tr>
+            <tr>
+              <th>Ports</th>
+              <td><span class="muted">Typical:</span> 80/443 ingress via proxy; internal service ports are not exposed directly</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" id="status" aria-labelledby="statusTitle">
+      <h2 id="statusTitle">Status / Release Info</h2>
+      <ul class="status-list">
+        <li><strong>Current stable version:</strong> <span id="currentVersion">Checking…</span></li>
+        <li><strong>Last checked:</strong> <span id="lastChecked">Pending</span></li>
+        <li><strong>Endpoint health:</strong> stable.json <span id="stableHealth">checking</span></li>
+        <li><strong>Endpoint health:</strong> changelog <span id="changelogHealth">checking</span></li>
+      </ul>
+      <p class="links-line">
+        <a href="/update/changelog.md">View full changelog</a>
+        <span>·</span>
+        <a href="/update/stable.json">View signed manifest (advanced)</a>
+      </p>
+      <p class="small">Older versions are available under <code>/update/X.Y.Z.json</code>. Example: <a id="versionManifestLink" href="/update/stable.json">current version manifest</a>.</p>
+      <pre id="changelogPreview" class="changelog" hidden></pre>
+    </section>
+
+    <section class="card" id="support" aria-labelledby="supportTitle">
+      <h2 id="supportTitle">Support / Contact</h2>
+      <p>Email: <a href="mailto:support@stonewallmedia.co.uk">support@stonewallmedia.co.uk</a></p>
+      <p>Documentation: <a href="https://www.stonewallmedia.co.uk/ordersys/" target="_blank" rel="noopener noreferrer">stonewallmedia.co.uk/ordersys</a></p>
+      <p>Sales / Enquiries: <a href="mailto:sales@stonewallmedia.co.uk">sales@stonewallmedia.co.uk</a></p>
+      <p class="small warn">Do not send secrets in email.</p>
     </section>
   </main>
 
-  <script src="/index.js" defer></script>
+  <script src="/assets/app.js" defer></script>
 </body>
 </html>

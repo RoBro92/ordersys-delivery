@@ -1,12 +1,17 @@
 (() => {
   const installSection = document.getElementById("install");
-  const commandEl = document.getElementById("installCommand");
-  const copyButton = document.getElementById("copyCommand");
-  const copyResult = document.getElementById("copyResult");
+  const installCommandEl = document.getElementById("installCommand");
+  const updateCommandEl = document.getElementById("updateCommand");
+  const copyInstallButton = document.getElementById("copyInstallCommand");
+  const copyUpdateButton = document.getElementById("copyUpdateCommand");
+  const copyInstallResult = document.getElementById("copyResultInstall");
+  const copyUpdateResult = document.getElementById("copyResultUpdate");
   const viewInstallerBtn = document.getElementById("viewInstallerBtn");
+  const viewUpdateBtn = document.getElementById("viewUpdateBtn");
   const installerModal = document.getElementById("installerModal");
   const closeInstallerBtn = document.getElementById("closeInstallerBtn");
   const installerStatus = document.getElementById("installerStatus");
+  const installerModalTitle = document.getElementById("installerModalTitle");
   const installerScript = document.getElementById("installerScript");
   const currentVersion = document.getElementById("currentVersion");
   const lastChecked = document.getElementById("lastChecked");
@@ -24,7 +29,7 @@
     installSection.focus({ preventScroll: true });
   }
 
-  async function copyCommand() {
+  async function copyCommand(commandEl, copyButton, copyResult) {
     if (!commandEl || !copyResult || !copyButton) {
       return;
     }
@@ -41,9 +46,15 @@
     }
   }
 
-  if (copyButton) {
-    copyButton.addEventListener("click", () => {
-      void copyCommand();
+  if (copyInstallButton) {
+    copyInstallButton.addEventListener("click", () => {
+      void copyCommand(installCommandEl, copyInstallButton, copyInstallResult);
+    });
+  }
+
+  if (copyUpdateButton) {
+    copyUpdateButton.addEventListener("click", () => {
+      void copyCommand(updateCommandEl, copyUpdateButton, copyUpdateResult);
     });
   }
 
@@ -57,30 +68,33 @@
     }
   }
 
-  async function loadInstallerScript() {
-    if (!installerStatus || !installerScript) {
+  async function loadScript(scriptUrl, scriptTitle, statusLabel) {
+    if (!installerStatus || !installerScript || !installerModalTitle) {
       return;
     }
 
-    if (cachedInstallerScript !== null) {
-      installerScript.textContent = cachedInstallerScript;
-      installerStatus.textContent = "Showing /install script.";
+    installerModalTitle.textContent = scriptTitle;
+
+    if (cachedInstallerScript !== null && cachedInstallerScript.url === scriptUrl) {
+      installerScript.textContent = cachedInstallerScript.content;
+      installerStatus.textContent = `Showing ${statusLabel}.`;
       return;
     }
 
-    installerStatus.textContent = "Loading installer script...";
+    installerStatus.textContent = "Loading script...";
     installerScript.textContent = "";
 
     try {
-      const response = await fetch("/install", { cache: "no-store" });
+      const response = await fetch(scriptUrl, { cache: "no-store" });
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
-      cachedInstallerScript = await response.text();
-      installerScript.textContent = cachedInstallerScript;
-      installerStatus.textContent = "Showing /install script.";
+      const content = await response.text();
+      cachedInstallerScript = { url: scriptUrl, content };
+      installerScript.textContent = content;
+      installerStatus.textContent = `Showing ${statusLabel}.`;
     } catch (_error) {
-      installerStatus.textContent = "Unable to load /install right now.";
+      installerStatus.textContent = `Unable to load ${statusLabel} right now.`;
       installerScript.textContent = "";
     }
   }
@@ -88,7 +102,14 @@
   if (viewInstallerBtn && installerModal) {
     viewInstallerBtn.addEventListener("click", () => {
       installerModal.hidden = false;
-      void loadInstallerScript();
+      void loadScript("/install", "Installer Script", "/install");
+    });
+  }
+
+  if (viewUpdateBtn && installerModal) {
+    viewUpdateBtn.addEventListener("click", () => {
+      installerModal.hidden = false;
+      void loadScript("/update/ordersys-update.sh", "Update Script", "/update/ordersys-update.sh");
     });
   }
 

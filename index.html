@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>OrderSys Delivery Portal</title>
+  <title>OrderSys Installer Portal</title>
   <meta name="description" content="OrderSys delivery and installer endpoint for IT operators and evaluators.">
-  <link rel="icon" type="image/png" href="/assets/logos/logo-thumb.png?v=20260223d">
-  <link rel="apple-touch-icon" href="/assets/logos/logo-thumb.png?v=20260223d">
-  <link rel="stylesheet" href="/assets/style.css?v=20260223d">
+  <link rel="icon" type="image/png" href="/assets/logos/logo-thumb.png?v=20260223e">
+  <link rel="apple-touch-icon" href="/assets/logos/logo-thumb.png?v=20260223e">
+  <link rel="stylesheet" href="/assets/style.css?v=20260223e">
 </head>
 <body>
   <div class="page-bg" aria-hidden="true"></div>
@@ -15,9 +15,9 @@
     <div class="brand">
       <div class="brand-copy">
         <h1 class="brand-title">
-          <img class="brand-text-logo" src="/assets/logos/logo-text.png?v=20260223d" alt="OrderSys" width="300" height="86">
+          <img class="brand-text-logo" src="/assets/logos/logo-text.png?v=20260223e" alt="OrderSys" width="300" height="86">
         </h1>
-        <p class="subtitle">On-prem ordering and receiving system</p>
+        <p class="subtitle">On site self hosted ordering and recieveing system</p>
         <p class="note">Delivery &amp; installer endpoint</p>
       </div>
     </div>
@@ -28,22 +28,26 @@
       <h2 id="installTitle">Install</h2>
       <div class="command-wrap">
         <pre class="command" id="installCommand">curl -fsSL https://ordersys.stonewallmedia.co.uk/install | bash</pre>
-        <button class="copy-btn" id="copyCommand" type="button">Copy</button>
+        <button class="copy-btn" id="copyInstallCommand" type="button">Copy</button>
       </div>
-      <p class="small" id="copyResult" aria-live="polite"></p>
+      <p class="small" id="copyResultInstall" aria-live="polite"></p>
+
+      <h3 class="subsection-title">Update</h3>
+      <p class="section-text">After install, admins can update directly from root console with <code>update ordersys</code>.</p>
+      <div class="command-wrap">
+        <pre class="command" id="updateCommand">curl -fsSL https://ordersys.stonewallmedia.co.uk/update/ordersys-update.sh | bash</pre>
+        <button class="copy-btn" id="copyUpdateCommand" type="button">Copy</button>
+      </div>
+      <p class="small" id="copyResultUpdate" aria-live="polite"></p>
 
       <details class="details">
         <summary>Show more</summary>
         <p class="section-text">The installer performs prerequisite checks, installs required dependencies, validates host compatibility, and guides setup for runtime components. This endpoint provides delivery artefacts only; no credentials are embedded.</p>
-        <p class="section-text">
+        <p class="section-text details-actions">
           <button class="inline-link-btn" id="viewInstallerBtn" type="button">View installer script</button>
+          <button class="inline-link-btn" id="viewUpdateBtn" type="button">View update script</button>
         </p>
       </details>
-
-      <div class="verify-box">
-        <p><strong>Verify URL:</strong> Installer is hosted at <code>ordersys.stonewallmedia.co.uk</code>.</p>
-        <p><strong>Licence token:</strong> Entered during setup (after install).</p>
-      </div>
     </section>
 
     <section class="card" id="hosts" aria-labelledby="hostsTitle">
@@ -109,14 +113,14 @@
   <div class="modal-backdrop" id="installerModal" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="installerModalTitle">
       <header class="modal-header">
-        <h2 id="installerModalTitle">Installer Script</h2>
-        <button type="button" class="modal-close" id="closeInstallerBtn" aria-label="Close installer script">Close</button>
+        <h2 id="installerModalTitle">Script Viewer</h2>
+        <button type="button" class="modal-close" id="closeInstallerBtn" aria-label="Close script viewer">Close</button>
       </header>
-      <p class="small" id="installerStatus">Loading installer script…</p>
+      <p class="small" id="installerStatus">Loading script…</p>
       <pre class="modal-script" id="installerScript"></pre>
     </section>
   </div>
 
-  <script src="/assets/app.js?v=20260223d" defer></script>
+  <script src="/assets/app.js?v=20260223e" defer></script>
 </body>
 </html>

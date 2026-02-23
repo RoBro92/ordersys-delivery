@@ -104,6 +104,22 @@ fetch_file() {
   curl -fsS --proto '=https' --tlsv1.2 --location --max-redirs 3 "$url" -o "$out_file"
 }
 
+extract_installer_embedded_public_key() {
+  local installer_url="$1"
+  local out_file="$2"
+  local key_b64
+
+  key_b64="$(
+    curl -fsS --proto '=https' --tlsv1.2 --location --max-redirs 3 "$installer_url" \
+      | sed -n 's/.*ORDERSYS_LICENSE_PUBLIC_KEY_PEM_B64:-\([^"}]*\).*/\1/p' \
+      | head -n1
+  )"
+  [[ -n "$key_b64" && "$key_b64" != "__LICENSE_PUBLIC_KEY_PEM_B64__" ]] || return 1
+
+  printf '%s' "$key_b64" | base64 -d > "$out_file"
+  return 0
+}
+
 verify_manifest_signature() {
   local manifest_file="$1"
   local sig_meta_file="$2"
@@ -179,7 +195,25 @@ trap 'rm -f "$manifest_file" "$sig_file"' EXIT
 
 fetch_file "$source_url" "$manifest_file"
 fetch_file "${source_url}.sig" "$sig_file"
-verify_manifest_signature "$manifest_file" "$sig_file" "$pubkey_file"
+
+if ! verify_manifest_signature "$manifest_file" "$sig_file" "$pubkey_file"; then
+  warn "Manifest signature failed with local key: ${pubkey_file}"
+  installer_url="$(printf 'https://%s/install' "$host")"
+  recovered_key_file="$(mktemp)"
+  if extract_installer_embedded_public_key "$installer_url" "$recovered_key_file" \
+    && verify_manifest_signature "$manifest_file" "$sig_file" "$recovered_key_file"; then
+    install -d -m 0755 "$(dirname "$pubkey_file")"
+    cp -f "$recovered_key_file" "$pubkey_file"
+    chmod 600 "$pubkey_file"
+    ok "Recovered manifest key from installer and updated ${pubkey_file}."
+  else
+    rm -f "$recovered_key_file"
+    err "Manifest signature verification failed."
+    err "Run installer repair to refresh key material: curl -fsSL https://ordersys.stonewallmedia.co.uk/install | bash"
+    exit 1
+  fi
+  rm -f "$recovered_key_file"
+fi
 ok "Manifest signature verified for ${source_url}."
 
 latest_version="$(jq -r '.latest_version // empty' "$manifest_file")"

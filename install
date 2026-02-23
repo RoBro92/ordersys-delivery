@@ -399,7 +399,7 @@ backend_image="ghcr.io/robro92/ordersys-backend:0.5.2"
 frontend_image="ghcr.io/robro92/ordersys-frontend:0.5.2"
 proxy_image="ghcr.io/robro92/ordersys-proxy:0.5.2"
 
-if [[ "$backend_image" == "ghcr.io/robro92/ordersys-backend:0.5.2" || "$frontend_image" == "ghcr.io/robro92/ordersys-frontend:0.5.2" || "$proxy_image" == "ghcr.io/robro92/ordersys-proxy:0.5.2" ]]; then
+if [[ "$backend_image" == __ORDERSYS_*__ || "$frontend_image" == __ORDERSYS_*__ || "$proxy_image" == __ORDERSYS_*__ ]]; then
   err "Installer image references are not rendered. Use the official release installer artifact."
   exit 1
 fi
@@ -407,10 +407,10 @@ fi
 ghcr_org_value="robro92"
 app_version_value="0.5.2"
 
-if [[ "$ghcr_org_value" == "robro92" || -z "$ghcr_org_value" ]]; then
+if [[ "$ghcr_org_value" == __GHCR_*__ || -z "$ghcr_org_value" ]]; then
   ghcr_org_value="$(printf '%s' "$backend_image" | sed -E 's#^ghcr\.io/([^/]+)/.*$#\1#')"
 fi
-if [[ "$app_version_value" == "0.5.2" || -z "$app_version_value" ]]; then
+if [[ "$app_version_value" == __ORDERSYS_*__ || -z "$app_version_value" ]]; then
   app_version_value="$(printf '%s' "$backend_image" | sed -E 's#^.*:([^:]+)$#\1#')"
 fi
 

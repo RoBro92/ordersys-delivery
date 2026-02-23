@@ -11,9 +11,11 @@
   <div class="page-bg" aria-hidden="true"></div>
   <header class="hero container" id="top">
     <div class="brand">
-      <img src="/assets/ordersys-logo.svg" alt="OrderSys logo" width="44" height="44">
+      <img class="brand-thumb" src="/assets/logos/logo-thumb.png" alt="OrderSys thumbnail logo" width="44" height="44">
       <div>
-        <h1>OrderSys</h1>
+        <h1 class="brand-title">
+          <img class="brand-text-logo" src="/assets/logos/logo-text.png" alt="OrderSys" width="260" height="64">
+        </h1>
         <p class="subtitle">On-prem ordering and receiving system</p>
         <p class="note">Delivery &amp; installer endpoint</p>
       </div>
@@ -29,7 +31,7 @@
   <main class="container grid">
     <section class="card" id="install" tabindex="-1" aria-labelledby="installTitle">
       <h2 id="installTitle">Install</h2>
-      <p class="section-text">Run the bootstrap installer on the target host:</p>
+      <p class="section-text">Run the bootstrap installer on the target host. The script installs required prerequisites, dependencies, and runtime components.</p>
       <div class="command-wrap">
         <pre class="command" id="installCommand">curl -fsSL https://ordersys.stonewallmedia.co.uk/install | bash</pre>
         <button class="copy-btn" id="copyCommand" type="button">Copy</button>
@@ -38,7 +40,7 @@
 
       <details class="details">
         <summary>Show more</summary>
-        <p class="section-text">The installer performs prerequisite checks, validates host compatibility, and guides setup for runtime components. This endpoint provides delivery artefacts only; no credentials are embedded.</p>
+        <p class="section-text">The installer performs prerequisite checks, installs required dependencies, validates host compatibility, and guides setup for runtime components. This endpoint provides delivery artefacts only; no credentials are embedded.</p>
       </details>
 
       <div class="verify-box">

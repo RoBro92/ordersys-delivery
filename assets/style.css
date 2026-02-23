@@ -62,19 +62,25 @@ body {
 .brand {
   display: flex;
   gap: 0.95rem;
-  align-items: center;
+  align-items: flex-start;
 }
 
-.brand img {
+.brand-thumb {
   width: 44px;
   height: 44px;
+  border-radius: 10px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.25);
 }
 
-h1 {
+.brand-title {
   margin: 0;
-  font-size: clamp(2rem, 5vw, 2.8rem);
-  line-height: 1.08;
-  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.brand-text-logo {
+  display: block;
+  width: min(260px, 62vw);
+  height: auto;
 }
 
 .subtitle {

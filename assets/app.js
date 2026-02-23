@@ -16,6 +16,10 @@
   const versionManifestLink = document.getElementById("versionManifestLink");
   let cachedInstallerScript = null;
 
+  if (installerModal) {
+    installerModal.hidden = true;
+  }
+
   if (installSection && window.location.hash === "#install") {
     installSection.focus({ preventScroll: true });
   }

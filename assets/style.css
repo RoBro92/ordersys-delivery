@@ -196,6 +196,10 @@ body {
   padding: 1rem;
 }
 
+.modal-backdrop[hidden] {
+  display: none !important;
+}
+
 .modal {
   width: min(980px, 100%);
   max-height: min(85vh, 760px);

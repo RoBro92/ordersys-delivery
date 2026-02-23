@@ -53,6 +53,19 @@ read_env_key() {
   awk -F= -v k="$key" '$1==k{ sub(/^[^=]*=/,"",$0); print; exit }' "$env_file" 2>/dev/null || true
 }
 
+upsert_env_key() {
+  local env_file="$1"
+  local key="$2"
+  local value="$3"
+  local tmp
+  install -d -m 0755 "$(dirname "$env_file")"
+  touch "$env_file"
+  tmp="$(mktemp)"
+  awk -F= -v k="$key" '$1!=k {print $0}' "$env_file" > "$tmp"
+  printf '%s=%s\n' "$key" "$value" >> "$tmp"
+  mv "$tmp" "$env_file"
+}
+
 sha256_file() {
   if command -v sha256sum >/dev/null 2>&1; then
     sha256sum "$1" | awk '{print $1}'
@@ -120,6 +133,104 @@ extract_installer_embedded_public_key() {
   return 0
 }
 
+extract_installer_embedded_scripts() {
+  local installer_url="$1"
+  local out_file="$2"
+  local scripts_b64
+
+  scripts_b64="$(
+    curl -fsS --proto '=https' --tlsv1.2 --location --max-redirs 3 "$installer_url" \
+      | sed -n 's/.*ORDERSYS_SCRIPTS_TGZ_B64:-\([^"}]*\).*/\1/p' \
+      | head -n1
+  )"
+  [[ -n "$scripts_b64" && "$scripts_b64" != "__ORDERSYS_SCRIPTS_TGZ_B64__" ]] || return 1
+
+  printf '%s' "$scripts_b64" | base64 -d > "$out_file"
+  return 0
+}
+
+install_ordersys_launcher() {
+  cat > /usr/local/bin/ordersys <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+read_env_key() {
+  local env_file="$1"
+  local key="$2"
+  awk -F= -v k="$key" '$1==k{ sub(/^[^=]*=/,"",$0); print; exit }' "$env_file" 2>/dev/null || true
+}
+
+env_file="/etc/ordersys/ordersys.env"
+candidates=()
+
+if [[ -n "${ORDERSYS_INSTALL_DIR:-}" ]]; then
+  candidates+=("${ORDERSYS_INSTALL_DIR}")
+fi
+if [[ -f "$env_file" ]]; then
+  env_install_dir="$(read_env_key "$env_file" ORDERSYS_INSTALL_DIR)"
+  if [[ -n "$env_install_dir" ]]; then
+    candidates+=("$env_install_dir")
+  fi
+fi
+candidates+=("/opt/ordersys" "/srv/ordersys")
+
+for install_dir in "${candidates[@]}"; do
+  if [[ -x "${install_dir}/scripts/ordersys" ]]; then
+    exec "${install_dir}/scripts/ordersys" "$@"
+  fi
+done
+
+echo "[ordersys] ERROR: Local CLI not found under expected install paths." >&2
+echo "[ordersys] ERROR: Run installer repair: curl -fsSL https://ordersys.stonewallmedia.co.uk/install | bash" >&2
+exit 1
+EOF
+  chmod 755 /usr/local/bin/ordersys
+}
+
+recover_local_cli_from_installer() {
+  local installer_url="$1"
+  local install_dir="$2"
+  local env_file="$3"
+  local archive_tmp
+
+  archive_tmp="$(mktemp)"
+  if ! extract_installer_embedded_scripts "$installer_url" "$archive_tmp"; then
+    rm -f "$archive_tmp"
+    return 1
+  fi
+
+  install -d -m 0755 "$install_dir"
+  tar -xzf "$archive_tmp" -C "$install_dir"
+  rm -f "$archive_tmp"
+
+  if [[ ! -x "${install_dir}/scripts/ordersys" ]]; then
+    return 1
+  fi
+
+  chmod +x "${install_dir}/scripts/ordersys" "${install_dir}/scripts/ordersys-update.sh" 2>/dev/null || true
+  install_ordersys_launcher
+  upsert_env_key "$env_file" ORDERSYS_INSTALL_DIR "$install_dir"
+  return 0
+}
+
+resolve_ordersys_cmd() {
+  if command -v ordersys >/dev/null 2>&1; then
+    printf '%s\n' "$(command -v ordersys)"
+    return
+  fi
+  if [[ -x "${INSTALL_DIR}/scripts/ordersys" ]]; then
+    printf '%s\n' "${INSTALL_DIR}/scripts/ordersys"
+    return
+  fi
+  printf '%s\n' ""
+}
+
+ordersys_cmd_usable() {
+  local cmd="$1"
+  [[ -n "$cmd" && -x "$cmd" ]] || return 1
+  "$cmd" help >/dev/null 2>&1
+}
+
 verify_manifest_signature() {
   local manifest_file="$1"
   local sig_meta_file="$2"
@@ -160,11 +271,14 @@ require_cmd jq
 require_cmd openssl
 require_cmd getent
 
-INSTALL_DIR="${ORDERSYS_INSTALL_DIR:-/opt/ordersys}"
 ENV_FILE="${ORDERSYS_UPDATE_ENV_FILE:-/etc/ordersys/ordersys.env}"
-
-[[ -d "$INSTALL_DIR" ]] || { err "OrderSys install directory not found: ${INSTALL_DIR}"; exit 1; }
 [[ -f "$ENV_FILE" ]] || { err "OrderSys env file not found: ${ENV_FILE}"; exit 1; }
+INSTALL_DIR="${ORDERSYS_INSTALL_DIR:-/opt/ordersys}"
+env_install_dir="$(read_env_key "$ENV_FILE" ORDERSYS_INSTALL_DIR)"
+if [[ -n "$env_install_dir" ]]; then
+  INSTALL_DIR="$env_install_dir"
+fi
+[[ -d "$INSTALL_DIR" ]] || { err "OrderSys install directory not found: ${INSTALL_DIR}"; exit 1; }
 
 source_url="$(read_env_key "$ENV_FILE" UPDATE_CHECK_URL)"
 source_url="${source_url:-https://ordersys.stonewallmedia.co.uk/update/stable.json}"
@@ -182,6 +296,7 @@ pubkey_file="${pubkey_file:-/opt/ordersys/keys/license_public.pem}"
 host="$(printf '%s' "$source_url" | sed -E 's#^https://([^/]+)/?.*$#\1#')"
 host="${host%%:*}"
 [[ -n "$host" ]] || { err "Could not parse update source host from ${source_url}"; exit 1; }
+installer_url="$(printf 'https://%s/install' "$host")"
 
 is_host_allowed "$host" "$allowed_hosts" || {
   err "Update source host '${host}' is not in UPDATE_ALLOWED_HOSTS (${allowed_hosts})."
@@ -198,7 +313,6 @@ fetch_file "${source_url}.sig" "$sig_file"
 
 if ! verify_manifest_signature "$manifest_file" "$sig_file" "$pubkey_file"; then
   warn "Manifest signature failed with local key: ${pubkey_file}"
-  installer_url="$(printf 'https://%s/install' "$host")"
   recovered_key_file="$(mktemp)"
   if extract_installer_embedded_public_key "$installer_url" "$recovered_key_file" \
     && verify_manifest_signature "$manifest_file" "$sig_file" "$recovered_key_file"; then
@@ -233,17 +347,20 @@ else
   warn "Changelog unavailable from ${changelog_url}"
 fi
 
-ordersys_cmd=""
-if command -v ordersys >/dev/null 2>&1; then
-  ordersys_cmd="$(command -v ordersys)"
-elif [[ -x "${INSTALL_DIR}/scripts/ordersys" ]]; then
-  ordersys_cmd="${INSTALL_DIR}/scripts/ordersys"
+ordersys_cmd="$(resolve_ordersys_cmd)"
+if ! ordersys_cmd_usable "$ordersys_cmd"; then
+  warn "Local 'ordersys' CLI is missing or broken. Attempting recovery from installer payload."
+  if recover_local_cli_from_installer "$installer_url" "$INSTALL_DIR" "$ENV_FILE"; then
+    ok "Recovered local CLI payload under ${INSTALL_DIR}/scripts."
+    ordersys_cmd="$(resolve_ordersys_cmd)"
+  fi
 fi
 
-[[ -n "$ordersys_cmd" ]] || {
-  err "Local 'ordersys' CLI not found. Run installer/repair first."
+if ! ordersys_cmd_usable "$ordersys_cmd"; then
+  err "Local 'ordersys' CLI not found or unusable after recovery."
+  err "Run installer repair: curl -fsSL https://ordersys.stonewallmedia.co.uk/install | bash"
   exit 1
-}
+fi
 
 ok "Delegating to local CLI: ${ordersys_cmd} update $*"
 exec "$ordersys_cmd" update "$@"

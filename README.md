@@ -11,12 +11,13 @@ This repo hosts public delivery endpoints for installer/bootstrap and update met
 Hosted endpoints:
 - `/install`
 - `/update/stable.json`
-- `/update/X.Y.Z.json`
+- `/update/<latest-version>.json` (current stable release only)
 
 ## Publishing Flow
 
 Production release artefacts are published automatically by the main `ordersys` repository release process.
 The expected publish source is signed release output from `ordersys` (`dist/install` and `dist/update/*`).
+Historical versioned update artefacts are intentionally pruned from this repository; only the current stable release payload is retained.
 
 Placeholders are acceptable only for initial scaffolding/testing and are not acceptable for production publishing.
 Signature (`*.sig`) and checksum (`*.sha256`) files must contain real release-generated values for live deployments.

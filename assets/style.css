@@ -279,12 +279,12 @@ body {
 .warn { color: var(--warn); }
 .muted { color: var(--muted); }
 
-.table-wrap { margin-top: 0.75rem; overflow-x: auto; }
+.table-wrap { margin-top: 0.75rem; }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 440px;
+  table-layout: fixed;
 }
 
 th,
@@ -298,6 +298,11 @@ td {
 th {
   width: 32%;
   font-weight: 700;
+}
+
+td {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .status-list {

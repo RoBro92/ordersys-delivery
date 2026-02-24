@@ -27,30 +27,22 @@
     <div class="grid-tools">
       <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle dark mode">Dark mode</button>
     </div>
-    <section class="card" id="install" tabindex="-1" aria-labelledby="installTitle">
-      <h2 id="installTitle">Install</h2>
-      <div class="command-wrap">
-        <pre class="command" id="installCommand">curl -fsSL https://ordersys.stonewallmedia.co.uk/install | bash</pre>
-        <button class="copy-btn" id="copyInstallCommand" type="button">Copy</button>
-      </div>
-      <p class="small" id="copyResultInstall" aria-live="polite"></p>
-
-      <h3 class="subsection-title">Update</h3>
-      <p class="section-text">After install, admins can update directly from root console with <code>update ordersys</code>.</p>
-      <div class="command-wrap">
-        <pre class="command" id="updateCommand">curl -fsSL https://ordersys.stonewallmedia.co.uk/update.sh | bash</pre>
-        <button class="copy-btn" id="copyUpdateCommand" type="button">Copy</button>
-      </div>
-      <p class="small" id="copyResultUpdate" aria-live="polite"></p>
-
-      <details class="details">
-        <summary>Show more</summary>
-        <p class="section-text">The installer performs prerequisite checks, installs required dependencies, validates host compatibility, and guides setup for runtime components. This endpoint provides delivery artefacts only; no credentials are embedded.</p>
-        <p class="section-text details-actions">
-          <button class="inline-link-btn" id="viewInstallerBtn" type="button">View installer script</button>
-          <button class="inline-link-btn" id="viewUpdateBtn" type="button">View update script</button>
-        </p>
-      </details>
+    <section class="card" id="status" aria-labelledby="statusTitle">
+      <h2 id="statusTitle">Status / Release Info</h2>
+      <ul class="status-list">
+        <li><strong>Current stable version:</strong> <span id="currentVersion">Checking…</span></li>
+        <li><strong>Changelog source:</strong> <span id="changelogSource">Pending</span></li>
+        <li><strong>Last checked:</strong> <span id="lastChecked">Pending</span></li>
+        <li><strong>Endpoint health:</strong> stable.json <span id="stableHealth">checking</span></li>
+        <li><strong>Endpoint health:</strong> changelog <span id="changelogHealth">checking</span></li>
+      </ul>
+      <p class="links-line">
+        <a href="/update/changelog.md">View full changelog</a>
+        <span>·</span>
+        <a href="/update/stable.json">View signed manifest (advanced)</a>
+      </p>
+      <p class="small">Only the current stable release is published here. Current manifest: <a id="versionManifestLink" href="/update/stable.json">/update/stable.json</a>.</p>
+      <pre id="changelogPreview" class="changelog" hidden></pre>
     </section>
 
     <section class="card" id="hosts" aria-labelledby="hostsTitle">
@@ -87,22 +79,30 @@
       </div>
     </section>
 
-    <section class="card" id="status" aria-labelledby="statusTitle">
-      <h2 id="statusTitle">Status / Release Info</h2>
-      <ul class="status-list">
-        <li><strong>Current stable version:</strong> <span id="currentVersion">Checking…</span></li>
-        <li><strong>Changelog source:</strong> <span id="changelogSource">Pending</span></li>
-        <li><strong>Last checked:</strong> <span id="lastChecked">Pending</span></li>
-        <li><strong>Endpoint health:</strong> stable.json <span id="stableHealth">checking</span></li>
-        <li><strong>Endpoint health:</strong> changelog <span id="changelogHealth">checking</span></li>
-      </ul>
-      <p class="links-line">
-        <a href="/update/changelog.md">View full changelog</a>
-        <span>·</span>
-        <a href="/update/stable.json">View signed manifest (advanced)</a>
-      </p>
-      <p class="small">Only the current stable release is published here. Current manifest: <a id="versionManifestLink" href="/update/stable.json">/update/stable.json</a>.</p>
-      <pre id="changelogPreview" class="changelog" hidden></pre>
+    <section class="card" id="install" tabindex="-1" aria-labelledby="installTitle">
+      <h2 id="installTitle">Install</h2>
+      <div class="command-wrap">
+        <pre class="command" id="installCommand">curl -fsSL https://ordersys.stonewallmedia.co.uk/install | bash</pre>
+        <button class="copy-btn" id="copyInstallCommand" type="button">Copy</button>
+      </div>
+      <p class="small" id="copyResultInstall" aria-live="polite"></p>
+
+      <h3 class="subsection-title">Update</h3>
+      <p class="section-text">After install, admins can update directly from root console with <code>update ordersys</code>.</p>
+      <div class="command-wrap">
+        <pre class="command" id="updateCommand">curl -fsSL https://ordersys.stonewallmedia.co.uk/update.sh | bash</pre>
+        <button class="copy-btn" id="copyUpdateCommand" type="button">Copy</button>
+      </div>
+      <p class="small" id="copyResultUpdate" aria-live="polite"></p>
+
+      <details class="details">
+        <summary>Show more</summary>
+        <p class="section-text">The installer performs prerequisite checks, installs required dependencies, validates host compatibility, and guides setup for runtime components. This endpoint provides delivery artefacts only; no credentials are embedded.</p>
+        <p class="section-text details-actions">
+          <button class="inline-link-btn" id="viewInstallerBtn" type="button">View installer script</button>
+          <button class="inline-link-btn" id="viewUpdateBtn" type="button">View update script</button>
+        </p>
+      </details>
     </section>
 
     <section class="card" id="support" aria-labelledby="supportTitle">

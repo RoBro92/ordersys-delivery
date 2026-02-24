@@ -4,6 +4,9 @@ Public delivery repository for OrderSys install/update artefacts only.
 
 This repository is intentionally static and contains no application source code.
 
+Current stable delivery payload:
+- `0.5.8` (see `VERSION` and `update/stable.json`)
+
 ## Purpose
 
 This repo hosts public delivery endpoints for installer/bootstrap and update metadata.
@@ -30,6 +33,9 @@ This repository is deployed via Cloudflare Pages:
 - no build step
 - root directory output
 - pure static hosting
+
+## Internal Handover
+- Internal resume snapshot: `INTERNAL_STATE.md`
 
 ## Hosted Updater Usage
 

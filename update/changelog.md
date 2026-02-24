@@ -1,20 +1,22 @@
-## v0.5.5 (2026-02-23)
+## v0.5.6 (2026-02-24)
 
 Added:
-- Installer now provisions a host-level `ordersys` command at `/usr/local/bin/ordersys`.
+- Production command-line experience now presents a production-only command set on installed systems.
+- Installer repair/update flows now consistently route updates through the licence-gated updater path.
 
 Fixed:
-- Hosted updater now attempts key recovery from the installer payload when local manifest key verification fails.
-- Installer now bundles the local CLI payload so operator commands are available on installed hosts.
+- Closed a path where installer re-run actions could apply updates outside the normal update entitlement checks.
+- Improved resilience when a host has a launcher command but missing local CLI payload files.
 
 Changed:
-- Release automation now derives installer-embedded public key from the active manifest-signing private key.
+- Public key material used for licence verification and installer-distributed trust has been rotated to the new production key set.
+- Production repair runs now preserve currently installed image references instead of implicitly moving to newest release.
 
 Security:
-- Signed manifest verification remains mandatory; this release removes key-drift risk between signed artefacts and installer-pinned key.
+- Update entitlement checks are now enforced consistently across normal update and installer-triggered update paths.
+- Production hosts no longer expose dev-oriented operator commands by default.
 
 Upgrade notes:
-- If `ordersys` command is missing on an older host, run installer repair once.
-- If updater previously failed with manifest signature errors, rerun:
-  - `curl -fsSL https://ordersys.stonewallmedia.co.uk/update.sh | bash`
+- After upgrading, use `ordersys update` (or the hosted updater) for all version changes.
+- If you manage your own token issuer, sign new tokens with the rotated production private key that matches this release.
 
